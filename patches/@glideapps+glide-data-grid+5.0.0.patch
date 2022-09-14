@@ -1,0 +1,345 @@
+diff --git a/node_modules/@glideapps/glide-data-grid/dist/cjs/index.js b/node_modules/@glideapps/glide-data-grid/dist/cjs/index.js
+index 828a3a6..300a6b9 100644
+--- a/node_modules/@glideapps/glide-data-grid/dist/cjs/index.js
++++ b/node_modules/@glideapps/glide-data-grid/dist/cjs/index.js
+@@ -2172,10 +2172,13 @@ var numberCellRenderer = {
+       value: value.data,
+       onKeyDown,
+       validatedSelection,
+-      onChange: (x) => onChange({
+-        ...value,
+-        data: x.floatValue
+-      })
++      onChange: (x) => {
++        var _a;
++        return onChange({
++          ...value,
++          data: Number.isNaN((_a = x.floatValue) != null ? _a : 0) ? 0 : x.floatValue
++        });
++      }
+     }));
+   }
+ };
+@@ -6448,8 +6451,20 @@ var DataGridSearch = (p) => {
+     canvasRef,
+     cellYOffset,
+     rows,
+-    columns
++    columns,
++    searchLabels: customLabels
+   } = p;
++  const searchLabels = React29.useMemo(() => ({
++    progres: (total, current) => {
++      const result = total >= 1e3 ? `over 1000` : `${total} results${total !== 1 ? "s" : ""}`;
++      return current >= 0 ? `${current + 1} of ${result}` : result;
++    },
++    previous: () => "Previous Result",
++    close: () => "Close Search",
++    hint: () => "Type to search",
++    next: () => "Next Result",
++    ...customLabels
++  }), [customLabels]);
+   const [searchID] = React29.useState(() => "search-box-" + Math.round(Math.random() * 1e3));
+   const [searchString, setSearchString] = React29.useState("");
+   const [searchStatus, setSearchStatus] = React29.useState();
+@@ -6620,18 +6635,15 @@ var DataGridSearch = (p) => {
+     };
+   }, [cancelSearch]);
+   const searchbox = React29.useMemo(() => {
+-    var _a, _b, _c;
++    var _a, _b, _c, _d, _e, _f, _g, _h;
+     let resultString;
+     if (searchStatus !== void 0) {
+-      resultString = searchStatus.results >= 1e3 ? `over 1000` : `${searchStatus.results} result${searchStatus.results !== 1 ? "s" : ""}`;
+-      if (searchStatus.selectedIndex >= 0) {
+-        resultString = `${searchStatus.selectedIndex + 1} of ${resultString}`;
+-      }
++      resultString = (_a = searchLabels.progres) == null ? void 0 : _a.call(searchLabels, searchStatus.results, searchStatus.selectedIndex);
+     }
+     const cancelEvent = (ev) => {
+       ev.stopPropagation();
+     };
+-    const rowsSearchedProgress = Math.floor(((_a = searchStatus == null ? void 0 : searchStatus.rowsSearched) != null ? _a : 0) / rows * 100);
++    const rowsSearchedProgress = Math.floor(((_b = searchStatus == null ? void 0 : searchStatus.rowsSearched) != null ? _b : 0) / rows * 100);
+     const progressStyle = {
+       width: `${rowsSearchedProgress}%`
+     };
+@@ -6653,19 +6665,19 @@ var DataGridSearch = (p) => {
+       tabIndex: showSearch ? void 0 : -1,
+       onKeyDownCapture: onSearchKeyDown
+     }), /* @__PURE__ */ React29.createElement("button", {
+-      "aria-label": "Previous Result",
++      "aria-label": (_c = searchLabels.previous) == null ? void 0 : _c.call(searchLabels),
+       "aria-hidden": !showSearch,
+       tabIndex: showSearch ? void 0 : -1,
+       onClick: onPrev,
+-      disabled: ((_b = searchStatus == null ? void 0 : searchStatus.results) != null ? _b : 0) === 0
++      disabled: ((_d = searchStatus == null ? void 0 : searchStatus.results) != null ? _d : 0) === 0
+     }, upArrow), /* @__PURE__ */ React29.createElement("button", {
+-      "aria-label": "Next Result",
++      "aria-label": (_e = searchLabels.next) == null ? void 0 : _e.call(searchLabels),
+       "aria-hidden": !showSearch,
+       tabIndex: showSearch ? void 0 : -1,
+       onClick: onNext,
+-      disabled: ((_c = searchStatus == null ? void 0 : searchStatus.results) != null ? _c : 0) === 0
++      disabled: ((_f = searchStatus == null ? void 0 : searchStatus.results) != null ? _f : 0) === 0
+     }, downArrow), onSearchClose !== void 0 && /* @__PURE__ */ React29.createElement("button", {
+-      "aria-label": "Close Search",
++      "aria-label": (_g = searchLabels.close) == null ? void 0 : _g.call(searchLabels),
+       "aria-hidden": !showSearch,
+       "data-testid": "search-close-button",
+       tabIndex: showSearch ? void 0 : -1,
+@@ -6681,7 +6693,7 @@ var DataGridSearch = (p) => {
+       className: "search-status"
+     }, /* @__PURE__ */ React29.createElement("label", {
+       htmlFor: searchID
+-    }, "Type to search")));
++    }, (_h = searchLabels.hint) == null ? void 0 : _h.call(searchLabels))));
+   }, [
+     onClose,
+     onNext,
+@@ -6693,7 +6705,8 @@ var DataGridSearch = (p) => {
+     searchStatus,
+     searchString,
+     showSearch,
+-    searchID
++    searchID,
++    searchLabels
+   ]);
+   return /* @__PURE__ */ React29.createElement(React29.Fragment, null, /* @__PURE__ */ React29.createElement(scrolling_data_grid_default, {
+     accessibilityHeight: p.accessibilityHeight,
+@@ -7881,12 +7894,14 @@ var DataEditorImpl = (p, forwardedRef) => {
+       let content = c;
+       if (initialValue !== void 0) {
+         switch (content.kind) {
+-          case GridCellKind.Number:
++          case GridCellKind.Number: {
++            const d = maybe(() => initialValue === "-" ? -0 : Number.parseFloat(initialValue), 0);
+             content = {
+               ...content,
+-              data: maybe(() => initialValue === "-" ? -0 : Number.parseFloat(initialValue), 0)
++              data: Number.isNaN(d) ? 0 : d
+             };
+             break;
++          }
+           case GridCellKind.Text:
+           case GridCellKind.Markdown:
+           case GridCellKind.Uri:
+@@ -8837,6 +8852,8 @@ var DataEditorImpl = (p, forwardedRef) => {
+         for (let x = r.x; x < r.x + r.width; x++) {
+           for (let y = r.y; y < r.y + r.height; y++) {
+             const cellValue = getCellContent([x - rowMarkerOffset, y]);
++            if (!cellValue.allowOverlay && cellValue.kind !== GridCellKind.Boolean)
++              continue;
+             let newVal = void 0;
+             if (cellValue.kind === GridCellKind.Custom) {
+               const editor = provideEditor == null ? void 0 : provideEditor(cellValue);
+diff --git a/node_modules/@glideapps/glide-data-grid/dist/js/index.js b/node_modules/@glideapps/glide-data-grid/dist/js/index.js
+index b25a5b5..4b7677c 100644
+--- a/node_modules/@glideapps/glide-data-grid/dist/js/index.js
++++ b/node_modules/@glideapps/glide-data-grid/dist/js/index.js
+@@ -2118,10 +2118,13 @@ var numberCellRenderer = {
+       value: value.data,
+       onKeyDown,
+       validatedSelection,
+-      onChange: (x) => onChange({
+-        ...value,
+-        data: x.floatValue
+-      })
++      onChange: (x) => {
++        var _a;
++        return onChange({
++          ...value,
++          data: Number.isNaN((_a = x.floatValue) != null ? _a : 0) ? 0 : x.floatValue
++        });
++      }
+     }));
+   }
+ };
+@@ -6394,8 +6397,20 @@ var DataGridSearch = (p) => {
+     canvasRef,
+     cellYOffset,
+     rows,
+-    columns
++    columns,
++    searchLabels: customLabels
+   } = p;
++  const searchLabels = React29.useMemo(() => ({
++    progres: (total, current) => {
++      const result = total >= 1e3 ? `over 1000` : `${total} results${total !== 1 ? "s" : ""}`;
++      return current >= 0 ? `${current + 1} of ${result}` : result;
++    },
++    previous: () => "Previous Result",
++    close: () => "Close Search",
++    hint: () => "Type to search",
++    next: () => "Next Result",
++    ...customLabels
++  }), [customLabels]);
+   const [searchID] = React29.useState(() => "search-box-" + Math.round(Math.random() * 1e3));
+   const [searchString, setSearchString] = React29.useState("");
+   const [searchStatus, setSearchStatus] = React29.useState();
+@@ -6566,18 +6581,15 @@ var DataGridSearch = (p) => {
+     };
+   }, [cancelSearch]);
+   const searchbox = React29.useMemo(() => {
+-    var _a, _b, _c;
++    var _a, _b, _c, _d, _e, _f, _g, _h;
+     let resultString;
+     if (searchStatus !== void 0) {
+-      resultString = searchStatus.results >= 1e3 ? `over 1000` : `${searchStatus.results} result${searchStatus.results !== 1 ? "s" : ""}`;
+-      if (searchStatus.selectedIndex >= 0) {
+-        resultString = `${searchStatus.selectedIndex + 1} of ${resultString}`;
+-      }
++      resultString = (_a = searchLabels.progres) == null ? void 0 : _a.call(searchLabels, searchStatus.results, searchStatus.selectedIndex);
+     }
+     const cancelEvent = (ev) => {
+       ev.stopPropagation();
+     };
+-    const rowsSearchedProgress = Math.floor(((_a = searchStatus == null ? void 0 : searchStatus.rowsSearched) != null ? _a : 0) / rows * 100);
++    const rowsSearchedProgress = Math.floor(((_b = searchStatus == null ? void 0 : searchStatus.rowsSearched) != null ? _b : 0) / rows * 100);
+     const progressStyle = {
+       width: `${rowsSearchedProgress}%`
+     };
+@@ -6599,19 +6611,19 @@ var DataGridSearch = (p) => {
+       tabIndex: showSearch ? void 0 : -1,
+       onKeyDownCapture: onSearchKeyDown
+     }), /* @__PURE__ */ React29.createElement("button", {
+-      "aria-label": "Previous Result",
++      "aria-label": (_c = searchLabels.previous) == null ? void 0 : _c.call(searchLabels),
+       "aria-hidden": !showSearch,
+       tabIndex: showSearch ? void 0 : -1,
+       onClick: onPrev,
+-      disabled: ((_b = searchStatus == null ? void 0 : searchStatus.results) != null ? _b : 0) === 0
++      disabled: ((_d = searchStatus == null ? void 0 : searchStatus.results) != null ? _d : 0) === 0
+     }, upArrow), /* @__PURE__ */ React29.createElement("button", {
+-      "aria-label": "Next Result",
++      "aria-label": (_e = searchLabels.next) == null ? void 0 : _e.call(searchLabels),
+       "aria-hidden": !showSearch,
+       tabIndex: showSearch ? void 0 : -1,
+       onClick: onNext,
+-      disabled: ((_c = searchStatus == null ? void 0 : searchStatus.results) != null ? _c : 0) === 0
++      disabled: ((_f = searchStatus == null ? void 0 : searchStatus.results) != null ? _f : 0) === 0
+     }, downArrow), onSearchClose !== void 0 && /* @__PURE__ */ React29.createElement("button", {
+-      "aria-label": "Close Search",
++      "aria-label": (_g = searchLabels.close) == null ? void 0 : _g.call(searchLabels),
+       "aria-hidden": !showSearch,
+       "data-testid": "search-close-button",
+       tabIndex: showSearch ? void 0 : -1,
+@@ -6627,7 +6639,7 @@ var DataGridSearch = (p) => {
+       className: "search-status"
+     }, /* @__PURE__ */ React29.createElement("label", {
+       htmlFor: searchID
+-    }, "Type to search")));
++    }, (_h = searchLabels.hint) == null ? void 0 : _h.call(searchLabels))));
+   }, [
+     onClose,
+     onNext,
+@@ -6639,7 +6651,8 @@ var DataGridSearch = (p) => {
+     searchStatus,
+     searchString,
+     showSearch,
+-    searchID
++    searchID,
++    searchLabels
+   ]);
+   return /* @__PURE__ */ React29.createElement(React29.Fragment, null, /* @__PURE__ */ React29.createElement(scrolling_data_grid_default, {
+     accessibilityHeight: p.accessibilityHeight,
+@@ -7827,12 +7840,14 @@ var DataEditorImpl = (p, forwardedRef) => {
+       let content = c;
+       if (initialValue !== void 0) {
+         switch (content.kind) {
+-          case GridCellKind.Number:
++          case GridCellKind.Number: {
++            const d = maybe(() => initialValue === "-" ? -0 : Number.parseFloat(initialValue), 0);
+             content = {
+               ...content,
+-              data: maybe(() => initialValue === "-" ? -0 : Number.parseFloat(initialValue), 0)
++              data: Number.isNaN(d) ? 0 : d
+             };
+             break;
++          }
+           case GridCellKind.Text:
+           case GridCellKind.Markdown:
+           case GridCellKind.Uri:
+@@ -8783,6 +8798,8 @@ var DataEditorImpl = (p, forwardedRef) => {
+         for (let x = r.x; x < r.x + r.width; x++) {
+           for (let y = r.y; y < r.y + r.height; y++) {
+             const cellValue = getCellContent([x - rowMarkerOffset, y]);
++            if (!cellValue.allowOverlay && cellValue.kind !== GridCellKind.Boolean)
++              continue;
+             let newVal = void 0;
+             if (cellValue.kind === GridCellKind.Custom) {
+               const editor = provideEditor == null ? void 0 : provideEditor(cellValue);
+diff --git a/node_modules/@glideapps/glide-data-grid/dist/ts/data-grid-search/data-grid-search.d.ts b/node_modules/@glideapps/glide-data-grid/dist/ts/data-grid-search/data-grid-search.d.ts
+index 39b0de2..9327786 100644
+--- a/node_modules/@glideapps/glide-data-grid/dist/ts/data-grid-search/data-grid-search.d.ts
++++ b/node_modules/@glideapps/glide-data-grid/dist/ts/data-grid-search/data-grid-search.d.ts
+@@ -1,11 +1,19 @@
+ import * as React from "react";
+ import { CellArray, GetCellsThunk, Item, Rectangle } from "../data-grid/data-grid-types";
+ import { ScrollingDataGridProps } from "../scrolling-data-grid/scrolling-data-grid";
++export declare type DataGridSearchLabels = {
++    readonly progres?: (total: number, current: number) => string;
++    readonly previous?: () => string;
++    readonly close?: () => string;
++    readonly hint?: () => string;
++    readonly next?: () => string;
++};
+ export interface DataGridSearchProps extends Omit<ScrollingDataGridProps, "prelightCells"> {
+     readonly getCellsForSelection?: (selection: Rectangle, abortSignal: AbortSignal) => GetCellsThunk | CellArray;
+     readonly onSearchResultsChanged?: (results: readonly Item[], navIndex: number) => void;
+     readonly showSearch?: boolean;
+     readonly onSearchClose?: () => void;
++    readonly searchLabels?: DataGridSearchLabels;
+ }
+ declare const DataGridSearch: React.FunctionComponent<DataGridSearchProps>;
+ export default DataGridSearch;
+diff --git a/node_modules/@glideapps/glide-data-grid/dist/ts/data-grid/data-grid-types.d.ts b/node_modules/@glideapps/glide-data-grid/dist/ts/data-grid/data-grid-types.d.ts
+index 63ead82..81ab78b 100644
+--- a/node_modules/@glideapps/glide-data-grid/dist/ts/data-grid/data-grid-types.d.ts
++++ b/node_modules/@glideapps/glide-data-grid/dist/ts/data-grid/data-grid-types.d.ts
+@@ -38,7 +38,7 @@ interface BaseGridMouseEventArgs {
+     readonly isLongTouch?: boolean;
+     readonly isEdge: boolean;
+     readonly button: number;
+-    readonly scrollEdge: readonly [-1 | 0 | 1, -1 | 0 | 1];
++    readonly scrollEdge: readonly [xDir: -1 | 0 | 1, yDir: -1 | 0 | 1];
+ }
+ export interface GridMouseCellEventArgs extends BaseGridMouseEventArgs, PositionableMouseEventArgs {
+     readonly kind: "cell";
+@@ -156,7 +156,7 @@ export declare enum GridColumnIcon {
+     ProtectedColumnOverlay = "protectedColumnOverlay"
+ }
+ export declare type CellArray = readonly (readonly GridCell[])[];
+-export declare type Item = readonly [number, number];
++export declare type Item = readonly [col: number, row: number];
+ export declare const headerCellCheckboxPrefix = "___gdg_header_cell_";
+ export declare const headerCellCheckedMarker: string;
+ export declare const headerCellUnheckedMarker: string;
+@@ -214,7 +214,7 @@ export interface BaseGridCell {
+     readonly lastUpdated?: number;
+     readonly style?: "normal" | "faded";
+     readonly themeOverride?: Partial<Theme>;
+-    readonly span?: readonly [number, number];
++    readonly span?: readonly [start: number, end: number];
+     readonly contentAlign?: "left" | "right" | "center";
+     readonly cursor?: CSSProperties["cursor"];
+ }
+@@ -326,7 +326,7 @@ export interface MarkerCell extends BaseGridCell {
+     readonly checked: boolean;
+     readonly markerKind: "checkbox" | "number" | "both";
+ }
+-export declare type Slice = Item;
++export declare type Slice = [start: number, end: number];
+ export declare type CompactSelectionRanges = readonly Slice[];
+ export declare class CompactSelection {
+     private readonly items;
+@@ -339,7 +339,7 @@ export declare class CompactSelection {
+     first: () => number | undefined;
+     last: () => number | undefined;
+     hasIndex: (index: number) => boolean;
+-    hasAll: (index: Item) => boolean;
++    hasAll: (index: Slice) => boolean;
+     some: (predicate: (index: number) => boolean) => boolean;
+     equals: (other: CompactSelection) => boolean;
+     toArray: () => number[];
