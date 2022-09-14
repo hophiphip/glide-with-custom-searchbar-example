@@ -1,0 +1,16 @@
+{
+    "select": {
+        "label": "Language"
+    },
+    "search": {
+        "hint": "Type Something..",
+        "next": "Next",
+        "prev": "Previous",
+        "close": "Close"
+    },
+    "columns": {
+        "one": "One",
+        "two": "Two",
+        "three": "Three"
+    }
+}

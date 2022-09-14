@@ -1,0 +1,16 @@
+{
+    "select": {
+        "label": "语言"
+    },
+    "search": {
+        "hint": "输入信息",
+        "next": "下一个",
+        "prev": "前一个",
+        "close": "关闭"
+    },
+    "columns": {
+        "one": "一个",
+        "two": "两个",
+        "three": "三"
+    }
+}
